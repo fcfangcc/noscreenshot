@@ -25,11 +25,11 @@ jobs:
           node-version: 16
 
       - uses: pnpm/action-setup@v2
-          name: Install pnpm
-          id: pnpm-install
-          with:
-            version: 8
-            run_install: false
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8
+          run_install: false
             
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
