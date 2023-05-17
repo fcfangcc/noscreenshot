@@ -1,9 +1,19 @@
 # NoScreenshot
 
-## todos
+## Shortcut
 
-1. support macos
+```
+CommandOrControl+Shift+Z
+```
 
-## for developer
+## Todos
 
-1. pnpm install
+- [ ] support macos
+- [ ] custom shortcut
+
+## For developer
+
+```bash
+pnpm install
+pnpm tauri dev
+```

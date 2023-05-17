@@ -7,3 +7,4 @@
 *.yml        text eol=lf
 *.json       text eol=lf
 *.cjs        text eol=lf
+*.rs         text eol=lf

@@ -1,6 +1,7 @@
 use std::{fs, path::Path};
 
 use screenshots::Screen;
+use tauri::{Manager, Window};
 
 pub struct ScreenshotTemp {
     id: String,
@@ -51,4 +52,36 @@ pub fn screenshots_fullscreens<P: AsRef<Path>>(tmp_dir: P, id: &str) -> Vec<Stri
             format!("{}/{}", temp.dirname(), filename)
         })
         .collect()
+}
+
+#[tauri::command]
+pub fn screenshot(window: Window, id: String) -> (String, Vec<String>) {
+    let tmp_dir = window.app_handle().path_resolver().app_data_dir().unwrap();
+
+    (
+        "fullscreen".to_string(),
+        screenshots_fullscreens(tmp_dir, &id),
+    )
+}
+
+#[tauri::command]
+pub fn clear_temp(window: Window, id: String) -> Result<(), String> {
+    let cache_dir = window.app_handle().path_resolver().app_data_dir().unwrap();
+    let temp_dir = cache_dir.join(ScreenshotTemp::new(id).dirname());
+
+    if temp_dir.exists() {
+        info!("delete tmp file. {}", temp_dir.display());
+        fs::remove_dir_all(temp_dir).map_err(|e| format!("{}", e))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn logger(level: &str, message: &str) {
+    match level {
+        "info" => info!(target: "webapp", "{}", message),
+        "error" => error!(target: "webapp", "{}", message),
+        "warning" | "warn" => warn!(target: "webapp", "{}", message),
+        _ => error!(target: "webapp", "level:{} message:{}", level, message),
+    }
 }

@@ -19,29 +19,36 @@ let ocrLoading = ref(false)
 let isScreenshots = ref(false)
 let srcList = reactive<string[]>([])
 
-const sleep = (delay: number) => new Promise(resolve => setTimeout(resolve, delay))
+const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay))
 
 onMounted(async () => {
   await registerShortcut()
   // 关闭时要把主窗口关闭
-  await appWindow.onCloseRequested(async () => {
-    for (let ul of unlistens) {
-      ul()
-    }
+  await appWindow.onCloseRequested(async (event) => {
+    event.preventDefault()
+
     for (let w of screenshotWindows) {
-      await w.close()
+      try {
+        await w.close()
+      } catch (e) {
+        break
+      }
     }
   })
   // 监听截图成功方法
   unlistens.push(
-    await listen<string>('screenshotOk', async event => {
+    await listen<string>('screenshotOk', async (event) => {
       isScreenshots.value = false
-      const notMainWindows = getAll().filter(i => i.label !== 'main')
+      const notMainWindows = getAll().filter((i) => i.label !== 'main')
 
       screenshotImg.value = event.payload
       srcList.unshift(event.payload)
       for (let w of notMainWindows) {
         await w.close()
+      }
+
+      if (!(await appWindow.isVisible())) {
+        await appWindow.show()
       }
       await appWindow.unminimize()
       screenshotWindows = []
@@ -53,7 +60,7 @@ onMounted(async () => {
   unlistens.push(
     await listen<string>('window-esc', async () => {
       isScreenshots.value = false
-      const notMainWindows = getAll().filter(i => i.label !== 'main')
+      const notMainWindows = getAll().filter((i) => i.label !== 'main')
       for (let w of notMainWindows) {
         await w.close()
       }
@@ -74,7 +81,7 @@ const openScWindow = async (name: string, schema: string, image: string, args: a
     ...args
   })
   w.onCloseRequested(() => {
-    screenshotWindows = screenshotWindows.filter(i => i.label != w.label)
+    screenshotWindows = screenshotWindows.filter((i) => i.label != w.label)
   })
   screenshotWindows.push(w)
 }
