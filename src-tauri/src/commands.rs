@@ -1,7 +1,7 @@
 use std::{fs, path::Path};
 
 use screenshots::Screen;
-use tauri::{Manager, Window};
+use tauri::{Manager, Menu, Window, WindowBuilder};
 
 pub struct ScreenshotTemp {
     id: String,
@@ -12,6 +12,7 @@ impl ScreenshotTemp {
         Self { id }
     }
 
+    #[allow(dead_code)]
     pub fn from_path(path: &str) -> Result<Self, String> {
         match path.starts_with("screenshots") {
             true => {
@@ -84,4 +85,42 @@ pub fn logger(level: &str, message: &str) {
         "warning" | "warn" => warn!(target: "webapp", "{}", message),
         _ => error!(target: "webapp", "level:{} message:{}", level, message),
     }
+}
+
+#[derive(serde::Deserialize, Debug)]
+pub struct DisplayInfo {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+    label: String,
+    url: String,
+}
+
+#[tauri::command]
+pub fn show_screenshot(handle: tauri::AppHandle, info: DisplayInfo) -> Result<String, String> {
+    println!("{:?}", info);
+    let mut builder =
+        WindowBuilder::new(&handle, info.label, tauri::WindowUrl::App(info.url.into()))
+            .position(info.x, info.y)
+            .inner_size(info.width, info.height)
+            .menu(Menu::new());
+
+    #[cfg(target_os = "windows")]
+    {
+        builder = builder.fullscreen(true).skip_taskbar(true)
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder
+            .hidden_title(true)
+            .decorations(false)
+            .fullscreen(false)
+            .focused(true)
+            .always_on_top(true)
+    }
+
+    let window = builder.build().map_err(|e| format!("{:?}", e))?;
+    Ok(window.label().to_string())
 }

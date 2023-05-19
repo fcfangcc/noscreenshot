@@ -33,6 +33,9 @@
       },
       "globalShortcut": {
         "all": true
+      },
+      "os": {
+        "all": true
       }
     },
     "bundle": {

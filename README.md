@@ -8,6 +8,7 @@ CommandOrControl+Shift+Z
 
 ## Todos
 
+- [ ] tesseract in rust
 - [ ] support macos
 - [ ] custom shortcut
 

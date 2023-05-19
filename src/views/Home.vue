@@ -5,14 +5,15 @@ import { Picture as IconPicture } from '@element-plus/icons-vue'
 import { invoke } from '@tauri-apps/api'
 import { message } from '@tauri-apps/api/dialog'
 import { listen } from '@tauri-apps/api/event'
+import { platform } from '@tauri-apps/api/os'
 import { isRegistered, register } from '@tauri-apps/api/globalShortcut'
-import { WebviewWindow, appWindow, availableMonitors, getAll } from '@tauri-apps/api/window'
+import { appWindow, availableMonitors, getAll } from '@tauri-apps/api/window'
 import { OCRClient } from 'tesseract-wasm'
 import { onMounted, reactive, ref } from 'vue'
 
 let screenshotImg = ref('')
 let uniqId = ref('')
-let screenshotWindows = reactive<WebviewWindow[]>([])
+let screenshotWindows = reactive<string[]>([])
 let unlistens: any = []
 let ocrData = ref('')
 let ocrLoading = ref(false)
@@ -27,7 +28,7 @@ onMounted(async () => {
   await appWindow.onCloseRequested(async (event) => {
     event.preventDefault()
 
-    for (let w of screenshotWindows) {
+    for (let w of getAll().filter((i) => screenshotWindows.includes(i.label))) {
       try {
         await w.close()
       } catch (e) {
@@ -74,18 +75,6 @@ const clearTempDir = async () => {
   await invoke('clear_temp', { id: uniqId.value })
 }
 
-const openScWindow = async (name: string, schema: string, image: string, args: any) => {
-  const w = new WebviewWindow(`theUniqueLabel${name}`, {
-    url: `/screenshot?schema=${schema}&image=${image}`,
-    fullscreen: true,
-    ...args
-  })
-  w.onCloseRequested(() => {
-    screenshotWindows = screenshotWindows.filter((i) => i.label != w.label)
-  })
-  screenshotWindows.push(w)
-}
-
 const screenshot = async () => {
   if (isScreenshots.value || ocrLoading.value) {
     await message(`There are already unfinished task!`, {
@@ -95,7 +84,9 @@ const screenshot = async () => {
     return
   }
 
-  if (!(await appWindow.isMinimized())) {
+  const platformName = await platform()
+
+  if (!(await appWindow.isMinimized()) && platformName !== 'darwin') {
     await appWindow.minimize()
     await sleep(500)
   }
@@ -108,11 +99,16 @@ const screenshot = async () => {
       id: uniqId.value
     })
     let monitors = await availableMonitors()
+
     for (let [index, m] of monitors.entries()) {
       // 这里顺序可能有bug，出现对不上的情况
-      await openScWindow(index.toString(), schema, images[index], {
+      const logical = m.size.toLogical(m.scaleFactor)
+
+      await showScreenshotWindow(index.toString(), schema, images[index], {
         x: m.position.x,
-        y: m.position.y
+        y: m.position.y,
+        height: logical.height,
+        width: logical.width
       })
     }
   } catch (e) {
@@ -136,6 +132,22 @@ const registerShortcut = async () => {
     const msg = `registerShortcut ${key} failed. ${e}`
     logger.error(msg)
     await message(msg, { title: 'register error', type: 'error' })
+  }
+}
+
+const showScreenshotWindow = async (name: string, schema: string, image: string, args: any) => {
+  try {
+    let label: string = await invoke('show_screenshot', {
+      info: {
+        url: `/screenshot?schema=${schema}&image=${image}`,
+        label: `theUniqueLabel${name}`,
+        ...args
+      }
+    })
+    screenshotWindows.push(label)
+  } catch (e: any) {
+    logger.error(e)
+    await message(e, { title: 'open window error', type: 'error' })
   }
 }
 

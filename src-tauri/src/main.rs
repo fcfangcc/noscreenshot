@@ -7,7 +7,8 @@ mod commands;
 pub mod tracing_config;
 mod tray;
 
-use std::{io::Read, process};
+use std::io::Read;
+use std::process;
 
 use tauri::http::{Request, Response};
 use tauri::{http::ResponseBuilder, Manager};
@@ -40,8 +41,8 @@ fn bind_menu_event(event: WindowMenuEvent) {
                 .spawn()
                 .unwrap();
 
-            #[cfg(not(target_os = "windows"))]
-            error!("Open logfile only in windows.")
+            #[cfg(target_os = "macos")]
+            process::Command::new("open").arg(&log_dir).spawn().unwrap();
         }
         _ => {}
     }
@@ -85,6 +86,7 @@ fn main() {
 
             tracing_config::init(&log_dir.display().to_string());
 
+            #[allow(unused_mut)]
             let mut window_builder = WindowBuilder::new(
                 app,
                 "main".to_string(),
@@ -97,7 +99,10 @@ fn main() {
 
             #[cfg(target_os = "windows")]
             {
-                window_builder = window_builder.transparent(true).decorations(true);
+                window_builder = window_builder
+                    .transparent(true)
+                    .decorations(true)
+                    .skip_taskbar(true);
             }
 
             let _ = window_builder.build()?;
@@ -109,7 +114,8 @@ fn main() {
     builder = builder.invoke_handler(tauri::generate_handler![
         commands::screenshot,
         commands::clear_temp,
-        commands::logger
+        commands::logger,
+        commands::show_screenshot
     ]);
 
     #[cfg(target_os = "macos")]
@@ -117,7 +123,8 @@ fn main() {
         builder = builder.menu(tauri::Menu::os_default("NoScreenshot"));
     }
 
-    let app = builder
+    #[allow(unused_mut)]
+    let mut app = builder
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
