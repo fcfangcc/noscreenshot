@@ -126,6 +126,7 @@ pub fn show_screenshot(handle: tauri::AppHandle, info: DisplayInfo) -> Result<St
 
     let window = builder.build().map_err(|e| format!("{:?}", e))?;
 
+    #[cfg(target_os = "macos")]
     window.hide_menubar();
 
     Ok(window.label().to_string())
@@ -133,11 +134,11 @@ pub fn show_screenshot(handle: tauri::AppHandle, info: DisplayInfo) -> Result<St
 
 pub trait WindowsExt {
     #[cfg(target_os = "macos")]
-
     fn hide_menubar(&self);
 }
 
 impl<R: tauri::Runtime> WindowsExt for Window<R> {
+    #[cfg(target_os = "macos")]
     fn hide_menubar(&self) {
         use cocoa::appkit::NSApplication;
         use cocoa::appkit::NSApplicationPresentationOptions;
