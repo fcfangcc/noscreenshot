@@ -106,7 +106,6 @@ fn main() {
             }
 
             let _ = window_builder.build()?;
-
             Ok(())
         });
 
@@ -129,7 +128,7 @@ fn main() {
         .expect("error while building tauri application");
 
     #[cfg(target_os = "macos")]
-    app.set_activation_policy(tauri::ActivationPolicy::Regular);
+    app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
     app.run(move |app_handle, e| match e {
         RunEvent::WindowEvent {

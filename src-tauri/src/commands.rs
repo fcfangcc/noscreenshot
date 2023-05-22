@@ -104,11 +104,16 @@ pub fn show_screenshot(handle: tauri::AppHandle, info: DisplayInfo) -> Result<St
         WindowBuilder::new(&handle, info.label, tauri::WindowUrl::App(info.url.into()))
             .position(info.x, info.y)
             .inner_size(info.width, info.height)
+            .skip_taskbar(true)
+            .resizable(false)
+            .focused(true)
+            .always_on_top(true)
+            .accept_first_mouse(true)
             .menu(Menu::new());
 
     #[cfg(target_os = "windows")]
     {
-        builder = builder.fullscreen(true).skip_taskbar(true)
+        builder = builder.fullscreen(true)
     }
 
     #[cfg(target_os = "macos")]
@@ -117,10 +122,31 @@ pub fn show_screenshot(handle: tauri::AppHandle, info: DisplayInfo) -> Result<St
             .hidden_title(true)
             .decorations(false)
             .fullscreen(false)
-            .focused(true)
-            .always_on_top(true)
     }
 
     let window = builder.build().map_err(|e| format!("{:?}", e))?;
+
+    window.hide_menubar();
+
     Ok(window.label().to_string())
+}
+
+pub trait WindowsExt {
+    #[cfg(target_os = "macos")]
+
+    fn hide_menubar(&self);
+}
+
+impl<R: tauri::Runtime> WindowsExt for Window<R> {
+    fn hide_menubar(&self) {
+        use cocoa::appkit::NSApplication;
+        use cocoa::appkit::NSApplicationPresentationOptions;
+        use cocoa::appkit::{NSMainMenuWindowLevel, NSWindow, NSWindowTitleVisibility};
+        use cocoa::base::id;
+
+        unsafe {
+            let ns_win = self.ns_window().unwrap() as id;
+            ns_win.setLevel_(((NSMainMenuWindowLevel + 1) as u64).try_into().unwrap());
+        }
+    }
 }
