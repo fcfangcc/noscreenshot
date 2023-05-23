@@ -12,6 +12,10 @@ CommandOrControl+Shift+Z
 - [x] support macos
 - [ ] custom shortcut
 
+## Use in macos
+
+todo
+
 ## For developer
 
 ```bash
