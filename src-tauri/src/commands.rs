@@ -98,7 +98,10 @@ pub struct DisplayInfo {
 }
 
 #[tauri::command]
-pub fn show_screenshot(handle: tauri::AppHandle, info: DisplayInfo) -> Result<String, String> {
+pub async fn show_screenshot(
+    handle: tauri::AppHandle,
+    info: DisplayInfo,
+) -> Result<String, String> {
     println!("{:?}", info);
     let mut builder =
         WindowBuilder::new(&handle, info.label, tauri::WindowUrl::App(info.url.into()))
@@ -140,9 +143,7 @@ pub trait WindowsExt {
 impl<R: tauri::Runtime> WindowsExt for Window<R> {
     #[cfg(target_os = "macos")]
     fn hide_menubar(&self) {
-        use cocoa::appkit::NSApplication;
-        use cocoa::appkit::NSApplicationPresentationOptions;
-        use cocoa::appkit::{NSMainMenuWindowLevel, NSWindow, NSWindowTitleVisibility};
+        use cocoa::appkit::{NSMainMenuWindowLevel, NSWindow};
         use cocoa::base::id;
 
         unsafe {

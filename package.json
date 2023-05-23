@@ -9,7 +9,6 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "force": "vite --force",
-    "tauri:build": "tauri build --features custom-protocol",
     "prepare": "husky install"
   },
   "dependencies": {
