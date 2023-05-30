@@ -6,10 +6,12 @@ import { invoke } from '@tauri-apps/api'
 import { message } from '@tauri-apps/api/dialog'
 import { listen } from '@tauri-apps/api/event'
 import { platform } from '@tauri-apps/api/os'
+import { writeText } from '@tauri-apps/api/clipboard'
 import { isRegistered, register } from '@tauri-apps/api/globalShortcut'
 import { appWindow, availableMonitors, getAll } from '@tauri-apps/api/window'
 import { OCRClient } from 'tesseract-wasm'
 import { onMounted, reactive, ref } from 'vue'
+import { ElMessage } from 'element-plus'
 
 let screenshotImg = ref('')
 let uniqId = ref('')
@@ -175,6 +177,16 @@ const ocr = async (b64data: string) => {
     ocr.destroy()
   }
 }
+
+const clipboard = async () => {
+  if (ocrData.value) {
+    await writeText(ocrData.value)
+    ElMessage({
+      message: 'Copy to clipboard success.',
+      type: 'success'
+    })
+  }
+}
 </script>
 
 <template>
@@ -183,6 +195,7 @@ const ocr = async (b64data: string) => {
     <h1>Welcome to noScreenshot!</h1>
     <div class="gen-div">
       <el-button type="primary" @click="screenshot()" :loading="ocrLoading">Screenshot</el-button>
+      <el-button type="primary" :disabled="!ocrData" @click="clipboard()">Clipboard</el-button>
     </div>
     <div class="gen-div">
       <el-input
