@@ -1,5 +1,9 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 let accessStatus = reactive({ icon: 'info', title: 'Unknow', subTitle: 'Click TEST' })
 let loading = ref(false)
 
@@ -37,15 +41,15 @@ const testAccess = async () => {
 <template>
   <div>
     <div class="helper-doc">
-      <div>1.选取苹果菜单 >“系统设置”，然后在边栏中点按“隐私与安全性” 。（你可能需要向下滚动。）</div>
-      <div>2.点按“屏幕录制”。</div>
-      <div>3.在列表中为每个 App 打开或关闭屏幕录制。</div>
+      <div>{{ t('helper.SCAccess.0') }}</div>
+      <div>{{ t('helper.SCAccess.1') }}</div>
+      <div>{{ t('helper.SCAccess.2') }}</div>
     </div>
 
     <div>
       <el-result :icon="accessStatus.icon" :title="accessStatus.title" :sub-title="accessStatus.subTitle">
         <template #extra>
-          <el-button type="primary" @click="testAccess" :loading="loading">Test</el-button>
+          <el-button type="primary" @click="testAccess" :loading="loading">{{ t('testAccess') }}</el-button>
         </template>
       </el-result>
     </div>

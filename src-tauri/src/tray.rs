@@ -5,9 +5,11 @@ use tauri::{
 pub fn create_tray(app: &tauri::App) -> tauri::Result<()> {
     let quit = CustomMenuItem::new("quit".to_string(), "Quit");
     let hide = CustomMenuItem::new("toggle".to_string(), "Hide");
+    let access_help = CustomMenuItem::new("access-help".to_string(), "AccessHelp");
 
     let tray_menu = SystemTrayMenu::new()
         .add_item(hide)
+        .add_item(access_help)
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(quit);
 
@@ -43,6 +45,19 @@ pub fn create_tray(app: &tauri::App) -> tauri::Result<()> {
                                 "Hide"
                             };
                             item_handle.set_title(new_title).unwrap();
+                        }
+                        "access-help" => {
+                            let handle = handle.clone();
+                            std::thread::spawn(move || {
+                                let _ = tauri::WindowBuilder::new(
+                                    &handle,
+                                    "AccessHelp",
+                                    tauri::WindowUrl::App("sc-help".into()),
+                                )
+                                .title("AccessHelp")
+                                .build()
+                                .unwrap();
+                            });
                         }
                         _ => {}
                     }
