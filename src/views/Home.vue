@@ -3,13 +3,19 @@ import chiModelUrl from '@/assets/chi_sim.traineddata?url'
 import { logger } from '@/command'
 import { Picture as IconPicture } from '@element-plus/icons-vue'
 import { invoke } from '@tauri-apps/api'
-import { message } from '@tauri-apps/api/dialog'
+import { message, confirm } from '@tauri-apps/api/dialog'
 import { listen } from '@tauri-apps/api/event'
 import { platform } from '@tauri-apps/api/os'
+import { writeText } from '@tauri-apps/api/clipboard'
 import { isRegistered, register } from '@tauri-apps/api/globalShortcut'
 import { appWindow, availableMonitors, getAll } from '@tauri-apps/api/window'
 import { OCRClient } from 'tesseract-wasm'
 import { onMounted, reactive, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
+import { screenCaptureAccess, openWindow } from '@/apis/index'
+
+const { t } = useI18n()
 
 let screenshotImg = ref('')
 let uniqId = ref('')
@@ -17,7 +23,7 @@ let screenshotWindows = reactive<string[]>([])
 let unlistens: any = []
 let ocrData = ref('')
 let ocrLoading = ref(false)
-let isScreenshots = ref(false)
+let screenshotLoading = ref(false)
 let srcList = reactive<string[]>([])
 
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay))
@@ -39,7 +45,7 @@ onMounted(async () => {
   // 监听截图成功方法
   unlistens.push(
     await listen<string>('screenshotOk', async (event) => {
-      isScreenshots.value = false
+      screenshotLoading.value = false
       const notMainWindows = getAll().filter((i) => i.label !== 'main')
 
       screenshotImg.value = event.payload
@@ -60,7 +66,7 @@ onMounted(async () => {
   // 退出截图。由于close方法有bug，这里继续event主窗口来实现
   unlistens.push(
     await listen<string>('window-esc', async () => {
-      isScreenshots.value = false
+      screenshotLoading.value = false
       const notMainWindows = getAll().filter((i) => i.label !== 'main')
       for (let w of notMainWindows) {
         await w.close()
@@ -76,13 +82,24 @@ const clearTempDir = async () => {
 }
 
 const screenshot = async () => {
-  if (isScreenshots.value || ocrLoading.value) {
-    await message(`There are already unfinished task!`, {
-      title: 'register error',
-      type: 'error'
+  if ((await screenCaptureAccess(true)) === false) {
+    const confirmed = await confirm(t('message.accessDenied'), 'ERROR')
+    if (confirmed) {
+      await openWindow()
+    }
+    return
+  }
+
+  if (screenshotLoading.value || ocrLoading.value) {
+    ElMessage({
+      message: t('message.doubleTask'),
+      type: 'error',
+      showClose: true,
+      duration: 0
     })
     return
   }
+  screenshotLoading.value = true
 
   const platformName = await platform()
 
@@ -92,8 +109,6 @@ const screenshot = async () => {
   }
   try {
     ocrData.value = ''
-
-    isScreenshots.value = true
     uniqId.value = Date.now().toString()
     let [schema, images] = await invoke<string[]>('screenshot', {
       id: uniqId.value
@@ -113,7 +128,7 @@ const screenshot = async () => {
     }
   } catch (e) {
     console.error(e)
-    isScreenshots.value = false
+    screenshotLoading.value = false
   }
 }
 
@@ -175,6 +190,16 @@ const ocr = async (b64data: string) => {
     ocr.destroy()
   }
 }
+
+const clipboard = async () => {
+  if (ocrData.value) {
+    await writeText(ocrData.value)
+    ElMessage({
+      message: t('message.clipboard'),
+      type: 'success'
+    })
+  }
+}
 </script>
 
 <template>
@@ -182,7 +207,8 @@ const ocr = async (b64data: string) => {
     <router-view />
     <h1>Welcome to noScreenshot!</h1>
     <div class="gen-div">
-      <el-button type="primary" @click="screenshot()" :loading="ocrLoading">Screenshot</el-button>
+      <el-button type="primary" @click="screenshot()" :loading="ocrLoading">{{ t('screenshot') }}</el-button>
+      <el-button type="primary" :disabled="!ocrData" @click="clipboard()">{{ t('clipboard') }}</el-button>
     </div>
     <div class="gen-div">
       <el-input

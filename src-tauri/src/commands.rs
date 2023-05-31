@@ -3,6 +3,8 @@ use std::{fs, path::Path};
 use screenshots::Screen;
 use tauri::{Manager, Menu, Window, WindowBuilder};
 
+use crate::window::open_helper_window;
+
 pub struct ScreenshotTemp {
     id: String,
 }
@@ -84,6 +86,36 @@ pub fn logger(level: &str, message: &str) {
         "error" => error!(target: "webapp", "{}", message),
         "warning" | "warn" => warn!(target: "webapp", "{}", message),
         _ => error!(target: "webapp", "level:{} message:{}", level, message),
+    }
+}
+
+#[tauri::command]
+pub fn screen_capture_access(request: bool) -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        use cgnew::access::ScreenCaptureAccess;
+        let access = ScreenCaptureAccess::default();
+        let has_access = access.preflight();
+        if !has_access && request {
+            access.request();
+        }
+        has_access
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        true
+    }
+}
+
+#[tauri::command]
+pub fn open_window(window: Window, name: &str) -> Result<(), String> {
+    match name {
+        "helper" => {
+            open_helper_window(window.app_handle());
+            Ok(())
+        }
+        _ => Err("not found this window.".to_string()),
     }
 }
 

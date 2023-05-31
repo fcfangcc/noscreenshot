@@ -6,6 +6,7 @@ extern crate tracing;
 mod commands;
 pub mod tracing_config;
 mod tray;
+mod window;
 
 use std::io::Read;
 use std::process;
@@ -105,7 +106,12 @@ fn main() {
                     .skip_taskbar(true);
             }
 
-            let _ = window_builder.build()?;
+            #[allow(unused)]
+            let window = window_builder.build()?;
+
+            #[cfg(debug_assertions)]
+            window.open_devtools();
+
             Ok(())
         });
 
@@ -114,7 +120,9 @@ fn main() {
         commands::screenshot,
         commands::clear_temp,
         commands::logger,
-        commands::show_screenshot
+        commands::show_screenshot,
+        commands::screen_capture_access,
+        commands::open_window
     ]);
 
     #[cfg(target_os = "macos")]
