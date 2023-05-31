@@ -1,6 +1,5 @@
 use std::{fs, path::Path};
 
-use cgnew::access::ScreenCaptureAccess;
 use screenshots::Screen;
 use tauri::{Manager, Menu, Window, WindowBuilder};
 
@@ -94,6 +93,7 @@ pub fn logger(level: &str, message: &str) {
 pub fn screen_capture_access(request: bool) -> bool {
     #[cfg(target_os = "macos")]
     {
+        use cgnew::access::ScreenCaptureAccess;
         let access = ScreenCaptureAccess::default();
         let has_access = access.preflight();
         if !has_access && request {
