@@ -2,28 +2,36 @@ use tauri::{
     CustomMenuItem, Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem,
 };
 
+use crate::window::open_helper_window;
+
 pub fn create_tray(app: &tauri::App) -> tauri::Result<()> {
     let quit = CustomMenuItem::new("quit".to_string(), "Quit");
-    let hide = CustomMenuItem::new("toggle".to_string(), "Hide");
-    let access_help = CustomMenuItem::new("access-help".to_string(), "AccessHelp");
+    let hide = CustomMenuItem::new("mainWindow".to_string(), "MainWindow");
 
-    let tray_menu = SystemTrayMenu::new()
-        .add_item(hide)
-        .add_item(access_help)
+    let mut tray_menu = SystemTrayMenu::new().add_item(hide);
+
+    #[cfg(target_os = "macos")]
+    {
+        let access_help = CustomMenuItem::new("access-help".to_string(), "AccessHelp");
+        tray_menu = tray_menu.add_item(access_help);
+    }
+
+    tray_menu = tray_menu
         .add_native_item(SystemTrayMenuItem::Separator)
         .add_item(quit);
 
     let handle = app.handle();
     let tray_id: String = "my-tray".to_string();
 
+    #[allow(clippy::single_match)]
     SystemTray::new()
-        .with_id(&tray_id)
+        .with_id(tray_id)
         .with_menu(tray_menu)
         .with_tooltip("NoScreenshot")
-        .on_event(move |event| {
-            let tray_handle = handle.tray_handle_by_id(&tray_id).unwrap();
-            match event {
-                SystemTrayEvent::LeftClick { .. } => {
+        .on_event(move |event| match event {
+            SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
+                "quit" => handle.exit(0),
+                "mainWindow" => {
                     let window = handle.get_window("main").unwrap();
                     if let Ok(true) = window.is_minimized() {
                         window.unminimize().unwrap()
@@ -31,39 +39,13 @@ pub fn create_tray(app: &tauri::App) -> tauri::Result<()> {
                     window.show().unwrap();
                     window.set_focus().unwrap();
                 }
-                SystemTrayEvent::MenuItemClick { id, .. } => {
-                    let item_handle = tray_handle.get_item(&id);
-                    match id.as_str() {
-                        "quit" => handle.exit(0),
-                        "toggle" => {
-                            let window = handle.get_window("main").unwrap();
-                            let new_title = if window.is_visible().unwrap() {
-                                window.hide().unwrap();
-                                "Show"
-                            } else {
-                                window.show().unwrap();
-                                "Hide"
-                            };
-                            item_handle.set_title(new_title).unwrap();
-                        }
-                        "access-help" => {
-                            let handle = handle.clone();
-                            std::thread::spawn(move || {
-                                let _ = tauri::WindowBuilder::new(
-                                    &handle,
-                                    "AccessHelp",
-                                    tauri::WindowUrl::App("sc-help".into()),
-                                )
-                                .title("AccessHelp")
-                                .build()
-                                .unwrap();
-                            });
-                        }
-                        _ => {}
-                    }
+                "access-help" => {
+                    let handle = handle.clone();
+                    open_helper_window(handle)
                 }
                 _ => {}
-            }
+            },
+            _ => {}
         })
         .build(app)
         .map(|_| ())

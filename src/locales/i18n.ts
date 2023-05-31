@@ -6,7 +6,8 @@ const messages = {
     clipboard: 'Clipboard',
     message: {
       clipboard: 'Copy to clipboard success.',
-      doubleTask: 'There are already unfinished task!'
+      doubleTask: 'There are already unfinished task!',
+      accessDenied: 'Access denied, goto helper?'
     },
     helper: {
       SCAccess: [
@@ -22,7 +23,8 @@ const messages = {
     clipboard: '拷贝内容',
     message: {
       clipboard: '内容已复制到黏贴板',
-      doubleTask: '已经有未完成的任务'
+      doubleTask: '已经有未完成的任务',
+      accessDenied: '没有截图权限,是否查看授权说明？'
     },
     helper: {
       SCAccess: [

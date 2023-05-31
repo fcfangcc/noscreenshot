@@ -25,7 +25,8 @@
         "show": true
       },
       "dialog": {
-        "message": true
+        "message": true,
+        "confirm": true
       },
       "protocol": {
         "asset": true,
@@ -48,7 +49,7 @@
       "targets": "all"
     },
     "security": {
-      "csp": ""
+      "csp": null
     },
     "updater": {
       "active": false

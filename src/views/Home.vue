@@ -3,7 +3,7 @@ import chiModelUrl from '@/assets/chi_sim.traineddata?url'
 import { logger } from '@/command'
 import { Picture as IconPicture } from '@element-plus/icons-vue'
 import { invoke } from '@tauri-apps/api'
-import { message } from '@tauri-apps/api/dialog'
+import { message, confirm } from '@tauri-apps/api/dialog'
 import { listen } from '@tauri-apps/api/event'
 import { platform } from '@tauri-apps/api/os'
 import { writeText } from '@tauri-apps/api/clipboard'
@@ -13,6 +13,7 @@ import { OCRClient } from 'tesseract-wasm'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { screenCaptureAccess, openWindow } from '@/apis/index'
 
 const { t } = useI18n()
 
@@ -81,6 +82,14 @@ const clearTempDir = async () => {
 }
 
 const screenshot = async () => {
+  if ((await screenCaptureAccess(true)) === false) {
+    const confirmed = await confirm(t('message.accessDenied'), 'ERROR')
+    if (confirmed) {
+      await openWindow()
+    }
+    return
+  }
+
   if (screenshotLoading.value || ocrLoading.value) {
     ElMessage({
       message: t('message.doubleTask'),

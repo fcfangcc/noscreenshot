@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { reactive, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { screenCaptureAccess } from '@/apis/index'
 
 const { t } = useI18n()
 
@@ -11,8 +12,7 @@ let loading = ref(false)
 onMounted(() => {})
 
 const testAccessStatus = async (): Promise<boolean> => {
-  // todo: invoke system call
-  return accessStatus.icon === 'error'
+  return await screenCaptureAccess(false)
 }
 
 const changeToSuccess = () => {
@@ -29,12 +29,14 @@ const changeToFailure = () => {
 
 const testAccess = async () => {
   loading.value = true
-  if (await testAccessStatus()) {
-    changeToSuccess()
-  } else {
-    changeToFailure()
-  }
-  loading.value = false
+  setTimeout(async () => {
+    if (await testAccessStatus()) {
+      changeToSuccess()
+    } else {
+      changeToFailure()
+    }
+    loading.value = false
+  }, 500)
 }
 </script>
 
