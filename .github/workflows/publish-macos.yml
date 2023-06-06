@@ -9,7 +9,6 @@ jobs:
       contents: write
     strategy:
       fail-fast: true
-      max-parallel: 1 # for use cache
       matrix:
         target: ['aarch64-apple-darwin', 'x86_64-apple-darwin']
 
@@ -37,10 +36,6 @@ jobs:
 
       - name: install dependencies (macos only)
         run: rustup target add ${{ matrix.target }}
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri/
 
       - name: build bundle
         uses: tauri-apps/tauri-action@v0

@@ -30,10 +30,6 @@ const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, de
 
 onMounted(async () => {
   await registerShortcut()
-  // only request once.
-  if ((await screenCaptureAccess()) === false) {
-    await screenCaptureAccess(true)
-  }
   await appWindow.onCloseRequested(async (event) => {
     event.preventDefault()
 
