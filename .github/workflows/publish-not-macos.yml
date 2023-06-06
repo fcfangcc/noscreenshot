@@ -17,15 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache # 不同的tag无法共享cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
       - name: setup node
         uses: actions/setup-node@v3
         with:
@@ -49,6 +40,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri/
 
       - name: build bundle
         uses: tauri-apps/tauri-action@v0

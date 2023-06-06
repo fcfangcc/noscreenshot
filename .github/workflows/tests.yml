@@ -18,15 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
       - name: setup node
         uses: actions/setup-node@v3
         with:
@@ -44,6 +35,10 @@ jobs:
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri/
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-20.04'

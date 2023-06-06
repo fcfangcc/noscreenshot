@@ -30,7 +30,10 @@ const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, de
 
 onMounted(async () => {
   await registerShortcut()
-  // 关闭时要把主窗口关闭
+  // only request once.
+  if ((await screenCaptureAccess()) === false) {
+    await screenCaptureAccess(true)
+  }
   await appWindow.onCloseRequested(async (event) => {
     event.preventDefault()
 
@@ -82,7 +85,7 @@ const clearTempDir = async () => {
 }
 
 const screenshot = async () => {
-  if ((await screenCaptureAccess(true)) === false) {
+  if ((await screenCaptureAccess()) === false) {
     const confirmed = await confirm(t('message.accessDenied'), 'ERROR')
     if (confirmed) {
       await openWindow()
