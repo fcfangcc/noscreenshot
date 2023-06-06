@@ -17,6 +17,7 @@
     "element-plus": "^2.3.4",
     "konva": "^9.0.2",
     "shortcuts": "^2.0.3",
+    "tauri-plugin-log-api": "github:tauri-apps/tauri-plugin-log",
     "tesseract-wasm": "^0.10.0",
     "vue": "^3.3.2",
     "vue-i18n": "^9.2.2",

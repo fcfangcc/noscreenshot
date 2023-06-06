@@ -1,21 +1,21 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #[macro_use]
-extern crate tracing;
+extern crate log;
 
 mod commands;
-pub mod tracing_config;
 mod tray;
 mod window;
 
+use log::LevelFilter;
 use std::io::Read;
 use std::process;
-
 use tauri::http::{Request, Response};
 use tauri::{http::ResponseBuilder, Manager};
 use tauri::{
     AppHandle, CustomMenuItem, Menu, RunEvent, Submenu, WindowBuilder, WindowEvent, WindowMenuEvent,
 };
+use tauri_plugin_log::LogTarget;
 
 fn menu() -> Menu {
     let quit = CustomMenuItem::new("appdir".to_string(), "AppDir");
@@ -80,13 +80,15 @@ fn bind_fullscreen_protocol(
 
 fn main() {
     let mut builder = tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::default()
+                .targets([LogTarget::LogDir, LogTarget::Stdout, LogTarget::Webview])
+                .level(LevelFilter::Info)
+                .build(),
+        )
         .on_menu_event(bind_menu_event)
         .setup(|app| {
             tray::create_tray(app)?;
-            let log_dir = app.path_resolver().app_log_dir().unwrap();
-
-            tracing_config::init(&log_dir.display().to_string());
-
             #[allow(unused_mut)]
             let mut window_builder = WindowBuilder::new(
                 app,
@@ -119,7 +121,6 @@ fn main() {
     builder = builder.invoke_handler(tauri::generate_handler![
         commands::screenshot,
         commands::clear_temp,
-        commands::logger,
         commands::show_screenshot,
         commands::screen_capture_access,
         commands::open_window

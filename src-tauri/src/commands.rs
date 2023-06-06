@@ -80,22 +80,13 @@ pub fn clear_temp(window: Window, id: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn logger(level: &str, message: &str) {
-    match level {
-        "info" => info!(target: "webapp", "{}", message),
-        "error" => error!(target: "webapp", "{}", message),
-        "warning" | "warn" => warn!(target: "webapp", "{}", message),
-        _ => error!(target: "webapp", "level:{} message:{}", level, message),
-    }
-}
-
-#[tauri::command]
 pub fn screen_capture_access(request: bool) -> bool {
     #[cfg(target_os = "macos")]
     {
         use cgnew::access::ScreenCaptureAccess;
         let access = ScreenCaptureAccess::default();
         let has_access = access.preflight();
+        info!("screen capture access: {},request: {}", has_access, request);
         if !has_access && request {
             access.request();
         }
@@ -134,7 +125,6 @@ pub async fn show_screenshot(
     handle: tauri::AppHandle,
     info: DisplayInfo,
 ) -> Result<String, String> {
-    println!("{:?}", info);
     let mut builder =
         WindowBuilder::new(&handle, info.label, tauri::WindowUrl::App(info.url.into()))
             .position(info.x, info.y)

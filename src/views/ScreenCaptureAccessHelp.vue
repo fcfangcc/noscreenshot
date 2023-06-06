@@ -12,7 +12,7 @@ let loading = ref(false)
 onMounted(() => {})
 
 const testAccessStatus = async (): Promise<boolean> => {
-  return await screenCaptureAccess(false)
+  return await screenCaptureAccess()
 }
 
 const changeToSuccess = () => {
