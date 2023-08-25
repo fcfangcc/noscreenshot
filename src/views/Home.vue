@@ -13,7 +13,7 @@ import { OCRClient } from 'tesseract-wasm'
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { screenCaptureAccess, openWindow } from '@/apis/index'
+import { screenCaptureAccess, openWindow, config } from '@/apis/index'
 import { attachConsole } from 'tauri-plugin-log-api'
 
 const { t } = useI18n()
@@ -30,6 +30,7 @@ let srcList = reactive<string[]>([])
 const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay))
 
 onMounted(async () => {
+  console.log(await config.getConfig())
   await attachConsole()
   await registerShortcut()
   // only request once.

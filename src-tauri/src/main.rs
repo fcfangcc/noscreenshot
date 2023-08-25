@@ -4,6 +4,7 @@
 extern crate log;
 
 mod commands;
+mod config;
 mod tray;
 mod window;
 
@@ -88,6 +89,10 @@ fn main() {
         )
         .on_menu_event(bind_menu_event)
         .setup(|app| {
+            let config_path = app.handle().path_resolver().app_log_dir().unwrap();
+            app.manage(config::Config::from_file(
+                config_path.join("config.json").to_str().unwrap(),
+            ));
             tray::create_tray(app)?;
             #[allow(unused_mut)]
             let mut window_builder = WindowBuilder::new(
@@ -123,7 +128,9 @@ fn main() {
         commands::clear_temp,
         commands::show_screenshot,
         commands::screen_capture_access,
-        commands::open_window
+        commands::open_window,
+        config::get_config,
+        config::set_shortcut_screenshot
     ]);
 
     #[cfg(target_os = "macos")]
