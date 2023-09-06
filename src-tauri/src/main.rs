@@ -5,6 +5,7 @@ extern crate log;
 
 mod commands;
 mod config;
+mod face;
 mod tray;
 mod window;
 
